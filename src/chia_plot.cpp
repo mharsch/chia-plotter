@@ -170,6 +170,9 @@ int main(int argc, char** argv)
 	std::string tmp_dir;
 	std::string tmp_dir2;
 	std::string final_dir;
+	std::vector<std::string> tmp_dir_vec;
+	std::vector<std::string> tmp_dir2_vec;
+	std::vector<std::string> final_dir_vec;
 	int num_plots = 1;
 	int num_threads = 4;
 	int num_buckets = 256;
@@ -181,9 +184,9 @@ int main(int argc, char** argv)
 		"r, threads", "Number of threads (default = 4)", cxxopts::value<int>(num_threads))(
 		"u, buckets", "Number of buckets (default = 256)", cxxopts::value<int>(num_buckets))(
 		"v, buckets3", "Number of buckets for phase 3+4 (default = buckets)", cxxopts::value<int>(num_buckets_3))(
-		"t, tmpdir", "Temporary directory, needs ~220 GiB (default = $PWD)", cxxopts::value<std::string>(tmp_dir))(
-		"2, tmpdir2", "Temporary directory 2, needs ~110 GiB [RAM] (default = <tmpdir>)", cxxopts::value<std::string>(tmp_dir2))(
-		"d, finaldir", "Final directory (default = <tmpdir>)", cxxopts::value<std::string>(final_dir))(
+		"t, tmpdir", "Temporary directory, needs ~220 GiB (default = $PWD)", cxxopts::value<std::vector<std::string>>(tmp_dir_vec))(
+		"2, tmpdir2", "Temporary directory 2, needs ~110 GiB [RAM] (default = <tmpdir>)", cxxopts::value<std::vector<string>>(tmp_dir2_vec))(
+		"d, finaldir", "Final directory (default = <tmpdir>)", cxxopts::value<std::vector<std::string>>(final_dir_vec))(
 		"p, poolkey", "Pool Public Key (48 bytes)", cxxopts::value<std::string>(pool_key_str))(
 		"f, farmerkey", "Farmer Public Key (48 bytes)", cxxopts::value<std::string>(farmer_key_str))(
 		"G, tmptoggle", "Alternate tmpdir/tmpdir2", cxxopts::value<bool>(tmptoggle))(
@@ -231,15 +234,15 @@ int main(int argc, char** argv)
 		std::cout << "Farmer Public Key (48 bytes) needs to be specified via -f <hex>, see `chia keys show`." << std::endl;
 		return -2;
 	}
-	if(tmp_dir.empty()) {
+	if(tmp_dir_vec.empty()) {
 		std::cout << "tmpdir needs to be specified via -t path/" << std::endl;
 		return -2;
 	}
-	if(tmp_dir2.empty()) {
-		tmp_dir2 = tmp_dir;
+	if(tmp_dir2_vec.empty()) {
+		tmp_dir2_vec = tmp_dir_vec;
 	}
-	if(final_dir.empty()) {
-		final_dir = tmp_dir;
+	if(final_dir_vec.empty()) {
+		final_dir_vec = tmp_dir_vec;
 	}
 	if(num_buckets_3 <= 0) {
 		num_buckets_3 = num_buckets;
@@ -388,6 +391,15 @@ int main(int argc, char** argv)
 			break;
 		}
 		std::cout << "Crafting plot " << i+1 << " out of " << num_plots << std::endl;
+
+		tmp_dir = tmp_dir_vec[i%tmp_dir_vec.size()];
+		tmp_dir2 = tmp_dir2_vec[i%tmp_dir2_vec.size()];
+		final_dir = final_dir_vec[i%final_dir_vec.size()];
+		std::cout << "tmp_dir size is: " << tmp_dir_vec.size() << std::endl;
+		std::cout << "tmp_dir[] is: " << tmp_dir_vec[i%tmp_dir_vec.size()] << std::endl;
+
+		std::cout << "calling with tmp_dir == " << tmp_dir << " tmp_dir2 == " << tmp_dir2 << " final_dir == " << final_dir << std::endl;
+/*
 		const auto out = create_plot(
 				num_threads, log_num_buckets, log_num_buckets_3,
 				pool_key, farmer_key, tmp_dir, tmp_dir2);
@@ -400,9 +412,9 @@ int main(int argc, char** argv)
 		}
 		if (tmptoggle) {
 			tmp_dir.swap(tmp_dir2);
-		}
+		}*/
 	}
-	copy_thread.close();
+//	copy_thread.close();
 	
 	return 0;
 }
